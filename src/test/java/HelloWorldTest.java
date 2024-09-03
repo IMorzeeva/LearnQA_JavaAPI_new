@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
+import static java.lang.Thread.sleep;
+
 
 public class HelloWorldTest {
 
@@ -65,4 +67,47 @@ public class HelloWorldTest {
         }
     }
 
+    @Test
+    public void testLongTimeJob() {
+        JsonPath response = RestAssured
+                .get("https://playground.learnqa.ru/ajax/api/longtime_job")
+                .jsonPath();
+
+        String token = response.get("token");
+        int seconds = response.get("seconds");
+
+        System.out.println("Token receiving:");
+        System.out.println("Token: " + token);
+        System.out.println("\nStatus checking:");
+
+            JsonPath response1 = RestAssured
+                    .given()
+                    .queryParam("token", token)
+                    .when()
+                    .get("https://playground.learnqa.ru/ajax/api/longtime_job")
+                    .jsonPath();
+
+            String status = response1.get("status");
+
+        if (status.equals("Job is NOT ready")) {
+            {
+                try {
+                    Thread.sleep(seconds * 1000L);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            };
+            JsonPath response2 = RestAssured
+                    .given()
+                    .queryParam("token", token)
+                    .when()
+                    .get("https://playground.learnqa.ru/ajax/api/longtime_job")
+                    .jsonPath();
+
+            String status1 = response2.get("status");
+            String result = response2.get("result");
+            System.out.println("Status: " + status1);
+            System.out.println("Result: " + result);
+        }
+    }
 }
