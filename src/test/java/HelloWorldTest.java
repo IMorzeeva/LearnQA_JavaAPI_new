@@ -1,4 +1,5 @@
 import io.restassured.RestAssured;
+import io.restassured.http.Header;
 import io.restassured.http.Headers;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
@@ -261,6 +262,21 @@ while (answer == "You are authorized");
         String responseCookie = response.getCookie("HomeWork");
         System.out.println(responseCookie);
         assertEquals("hw_value", responseCookie, "Not expected result");
+
+
+    }
+
+    @Test
+    public void testHeaders(){
+        Response response = RestAssured
+                .given()
+                .when()
+                .get("https://playground.learnqa.ru/api/homework_header")
+                .andReturn();
+
+        String responseHeaders = response.getHeader("x-secret-homework-header");
+        System.out.println(responseHeaders);
+        assertEquals("Some secret value", responseHeaders, "Not expected result");
 
 
     }
