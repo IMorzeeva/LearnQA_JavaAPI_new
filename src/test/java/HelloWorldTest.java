@@ -7,6 +7,8 @@ import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Headers
 import java.util.*;
 
 import static java.lang.Thread.sleep;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class HelloWorldTest {
@@ -208,7 +210,7 @@ body.put("password", passwords[i]);
 
         Map<String, String> cookies = new HashMap<>();
         body.put("login","super_admin");
-        cookies.put("auth_cookie", responseCookie);
+        cookies.put("Cookie", responseCookie);
 
         Response responseAuth = RestAssured
                 .given()
@@ -219,12 +221,32 @@ body.put("password", passwords[i]);
 
         String message = responseAuth.htmlPath().getString("body");
         System.out.println(message);
-        System.out.println(responseCookie);
         i++;
 }
 
 while (answer == "You are authorized");
+        System.out.println(answer);
 
+
+    }
+ @Test
+   public void testLenghtOfTheMessage(){
+        Response response = RestAssured
+                .given()
+                .redirects()
+                .follow(false)
+                .when()
+                .get("https://playground.learnqa.ru/api/long_redirect")
+                .andReturn();
+
+        response.prettyPrint();
+        String locationHeader = response.getHeader("Location");
+
+        String str = locationHeader;
+        int count = str.length();
+        assertTrue(count>15, "Count of symbols <15");
+
+     System.out.println("Count of symbols > 15");
 
     }
 }
