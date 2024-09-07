@@ -1,8 +1,8 @@
 import io.restassured.RestAssured;
+import io.restassured.http.Headers;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Headers;
 
 import java.util.*;
 
@@ -249,4 +249,20 @@ while (answer == "You are authorized");
      System.out.println("Count of symbols > 15");
 
     }
+
+    @Test
+    public void testCookie(){
+        Response response = RestAssured
+                .given()
+                .when()
+                .get("https://playground.learnqa.ru/api/homework_cookie")
+                .andReturn();
+
+        String responseCookie = response.getCookie("HomeWork");
+        System.out.println(responseCookie);
+        assertEquals("hw_value", responseCookie, "Not expected result");
+
+
+    }
+
 }
