@@ -1,13 +1,12 @@
 import io.restassured.RestAssured;
-import io.restassured.http.Header;
-import io.restassured.http.Headers;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.*;
 
-import static java.lang.Thread.sleep;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -15,19 +14,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class HelloWorldTest {
 
     @Test
-    public void testTheSecondmessage(){
+    public void testTheSecondmessage() {
         JsonPath response = RestAssured
                 .get("https://playground.learnqa.ru/api/get_json_homework")
                 .jsonPath();
 
-        ArrayList<LinkedHashMap<String,String>> messages = response.get("messages");
+        ArrayList<LinkedHashMap<String, String>> messages = response.get("messages");
 
         System.out.println(messages.get(1).get("message"));
     }
 
     @Test
 
-    public void testUrlRedirect(){
+    public void testUrlRedirect() {
         Response response = RestAssured
                 .given()
                 .redirects()
@@ -43,7 +42,7 @@ public class HelloWorldTest {
     }
 
     @Test
-    public void testLongRedirect(){
+    public void testLongRedirect() {
         Response response = RestAssured
                 .given()
                 .redirects()
@@ -55,7 +54,7 @@ public class HelloWorldTest {
         int statusCode = response.getStatusCode();
         String locationHeader = response.getHeader("Location");
 
-        while (statusCode == 301){
+        while (statusCode == 301) {
             response = RestAssured
                     .given()
                     .redirects()
@@ -84,14 +83,14 @@ public class HelloWorldTest {
         System.out.println("Token: " + token);
         System.out.println("\nStatus checking:");
 
-            JsonPath response1 = RestAssured
-                    .given()
-                    .queryParam("token", token)
-                    .when()
-                    .get("https://playground.learnqa.ru/ajax/api/longtime_job")
-                    .jsonPath();
+        JsonPath response1 = RestAssured
+                .given()
+                .queryParam("token", token)
+                .when()
+                .get("https://playground.learnqa.ru/ajax/api/longtime_job")
+                .jsonPath();
 
-            String status = response1.get("status");
+        String status = response1.get("status");
 
         if (status.equals("Job is NOT ready")) {
             {
@@ -100,7 +99,8 @@ public class HelloWorldTest {
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-            };
+            }
+            ;
             JsonPath response2 = RestAssured
                     .given()
                     .queryParam("token", token)
@@ -188,50 +188,49 @@ public class HelloWorldTest {
         passwords[67] = "000000";
         passwords[68] = "123qwe";
 
+        String answer = "You are authorized";
+        int i = 0;
 
-String answer = "You are authorized";
-int i = 0;
+        do
+        {
 
-do
-{
+            Map<String, String> body = new HashMap<>();
+            body.put("login","super_admin");
+            body.put("password", passwords[i]);
 
-Map<String, String> body = new HashMap<>();
-body.put("login","super_admin");
-body.put("password", passwords[i]);
+            Response response = RestAssured
+                    .given()
+                    .body(body)
+                    .post("https://playground.learnqa.ru/ajax/api/get_secret_password_homework")
+                    .andReturn();
 
-        Response response = RestAssured
-                .given()
-                .body(body)
-                .post("https://playground.learnqa.ru/ajax/api/get_secret_password_homework")
-                .andReturn();
+            String responseCookie = response.getCookie("auth_cookie");
+            System.out.println("password: " + passwords[i]);
+//            System.out.println("auth_cookie: " + responseCookie);
 
-       String responseCookie = response.getCookie("auth_cookie");
-       System.out.println("password: " + passwords[i]);
-       System.out.println("auth_cookie: " + responseCookie);
+            Map<String, String> cookies = new HashMap<>();
+            Map<String, String> body2 = new HashMap<>();
+            body2.put("login","super_admin");
+            cookies.put("auth_cookie", responseCookie);
 
-        Map<String, String> cookies = new HashMap<>();
-        body.put("login","super_admin");
-        cookies.put("Cookie", responseCookie);
+            Response responseAuth = RestAssured
+                    .given()
+                    .body(body2)
+                    .cookies(cookies)
+                    .post("https://playground.learnqa.ru/ajax/api/check_auth_cookie")
+                    .andReturn();
 
-        Response responseAuth = RestAssured
-                .given()
-                .body(body)
-                .cookies(cookies)
-                .post("https://playground.learnqa.ru/ajax/api/check_auth_cookie")
-                .andReturn();
+            answer = responseAuth.htmlPath().getString("body");
+            System.out.println(answer);
+            i++;
+        }
 
-        String message = responseAuth.htmlPath().getString("body");
-        System.out.println(message);
-        i++;
-}
-
-while (answer == "You are authorized");
-        System.out.println(answer);
-
+        while (answer.equals("You are NOT authorized"));
 
     }
- @Test
-   public void testLenghtOfTheMessage(){
+
+    @Test
+    public void testLenghtOfTheMessage() {
         Response response = RestAssured
                 .given()
                 .redirects()
@@ -245,14 +244,14 @@ while (answer == "You are authorized");
 
         String str = locationHeader;
         int count = str.length();
-        assertTrue(count>15, "Count of symbols <15");
+        assertTrue(count > 15, "Count of symbols <15");
 
-     System.out.println("Count of symbols > 15");
+        System.out.println("Count of symbols > 15");
 
     }
 
     @Test
-    public void testCookie(){
+    public void testCookie() {
         Response response = RestAssured
                 .given()
                 .when()
@@ -267,7 +266,7 @@ while (answer == "You are authorized");
     }
 
     @Test
-    public void testHeaders(){
+    public void testHeaders() {
         Response response = RestAssured
                 .given()
                 .when()
@@ -277,6 +276,42 @@ while (answer == "You are authorized");
         String responseHeaders = response.getHeader("x-secret-homework-header");
         System.out.println(responseHeaders);
         assertEquals("Some secret value", responseHeaders, "Not expected result");
+
+
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30",
+            "Mozilla/5.0 (iPad; CPU OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/91.0.4472.77 Mobile/15E148 Safari/604.1",
+            "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.100.0",
+            "Mozilla/5.0 (iPad; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
+    })
+
+    public void headersCheck(String name) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("User-Agent", name);
+        Response response = RestAssured
+                .given()
+                .headers(headers)
+                .when()
+                .get("https://playground.learnqa.ru/ajax/api/user_agent_check")
+                .andReturn();
+
+        response.print();
+        String headerPlatform = response.getHeader("platform");
+        //String expectedPlatform = String.("Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30");
+
+
+        String headerBrowser = response.getHeader("browser");
+        String headerDevice = response.getHeader("device");
+
+
+//          assertEquals("Some secret value", responseHeaders, "Not expected result");
+//        Header responseHeaders = response.getHeaders();
+//        System.out.println(responseHeaders);
+//        assertEquals("Some secret value", responseHeaders, "Not expected result");
 
 
     }
