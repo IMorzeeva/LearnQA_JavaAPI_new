@@ -292,27 +292,51 @@ public class HelloWorldTest {
     public void headersCheck(String name) {
         Map<String, String> headers = new HashMap<>();
         headers.put("User-Agent", name);
-        Response response = RestAssured
+        JsonPath response = RestAssured
                 .given()
                 .headers(headers)
                 .when()
                 .get("https://playground.learnqa.ru/ajax/api/user_agent_check")
-                .andReturn();
-
-        response.print();
-        String headerPlatform = response.getHeader("platform");
-        //String expectedPlatform = String.("Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30");
+                .jsonPath();
 
 
-        String headerBrowser = response.getHeader("browser");
-        String headerDevice = response.getHeader("device");
+        String platform = response.get("platform");
+        System.out.println(platform);
+
+        String browser = response.get("browser");
+        System.out.println(browser);
+
+        String device = response.get("device");
+        System.out.println(device);
 
 
-//          assertEquals("Some secret value", responseHeaders, "Not expected result");
-//        Header responseHeaders = response.getHeaders();
-//        System.out.println(responseHeaders);
-//        assertEquals("Some secret value", responseHeaders, "Not expected result");
 
+        if(name.equals("Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"))
+        {
+            assertEquals("Mobile", platform, "Not expected result");
+            assertEquals("No", browser, "Not expected result");
+            assertEquals("Android", device, "Not expected result");
+        }else if(name.equals("Mozilla/5.0 (iPad; CPU OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/91.0.4472.77 Mobile/15E148 Safari/604.1"))
+        {
+            assertEquals("Mobile", platform, "Not expected result");
+            assertEquals("Chrome", browser, "Not expected result");
+            assertEquals("iOS", device, "Not expected result");
+        }else if(name.equals("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"))
+        {
+            assertEquals("Googlebot", platform, "Not expected result");
+            assertEquals("Unknown", browser, "Not expected result");
+            assertEquals("Unknown", device, "Not expected result");
+        }else if(name.equals("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.100.0"))
+        {
+            assertEquals("Web", platform, "Not expected result");
+            assertEquals("Chrome", browser, "Not expected result");
+            assertEquals("No", device, "Not expected result");
+        }else if(name.equals("Mozilla/5.0 (iPad; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"))
+        {
+            assertEquals("Mobile", platform, "Not expected result");
+            assertEquals("No", browser, "Not expected result");
+            assertEquals("iPhone", device, "Not expected result");
+        }
 
     }
 
