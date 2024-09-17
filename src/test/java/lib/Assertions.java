@@ -3,6 +3,7 @@ package lib;
 import io.restassured.response.Response;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class Assertions {
     public static void assertResponseTextEquals(Response Response, String expectedAnswer){
@@ -21,5 +22,7 @@ public class Assertions {
             );
         }
 
-
+    public static void assertResponseTextContains(Response Response, String expectedAnswer){
+        assertTrue(expectedAnswer.contains("field is too short"));
+    }
 }
