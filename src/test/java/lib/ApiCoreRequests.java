@@ -3,7 +3,10 @@ package lib;
 import io.qameta.allure.Step;
 import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
+import io.restassured.http.Cookies;
+import io.restassured.http.Header;
 import io.restassured.response.Response;
+import org.apache.http.cookie.Cookie;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -70,5 +73,31 @@ public class ApiCoreRequests {
 
         return outStr;
     }
+
+    @Step("Authorization as other user:login")
+    public Response makeGetRequestAuthAsSameUser (String url, Map<String, String> authData) {
+
+        return RestAssured.given()
+                .filter(new AllureRestAssured())
+                .body(authData)
+                .post(url)
+                .andReturn();
+
+    }
+
+    @Step("Authorization as other user: getting user details")
+    public Response makeGetRequestAuthAsOtherUser (String url, String cookie, String header) {
+        return RestAssured.given()
+                .filter(new AllureRestAssured())
+                .header(new Header("x-csrf-token", header))
+                .cookie("auth_sid", cookie)
+//                .cookies(new Cookies("auth_sid", cookie))
+//                .cookies("auth_sid", cookie)
+                .get(url)
+                .andReturn();
+
+    }
+
+
 
 }
