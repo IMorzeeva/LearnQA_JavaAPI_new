@@ -1,5 +1,6 @@
 package tests;
 
+import io.qameta.allure.Description;
 import io.restassured.RestAssured;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
@@ -7,6 +8,7 @@ import lib.ApiCoreRequests;
 import lib.Assertions;
 import lib.BaseTestCase;
 import lib.DataGenerator;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -17,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class UserDeleteTest extends BaseTestCase {
     private final ApiCoreRequests apiCoreRequests = new ApiCoreRequests();
 
+    @Description("Delete user without login")
+    @DisplayName("Delete user without login")
     @Test
     public void TestDeleteUserId2() {
         String email = "vinkotov@example.com";
@@ -25,12 +29,9 @@ public class UserDeleteTest extends BaseTestCase {
         userData.put("email", email);
         userData.put("password", "1234");
 
+        JsonPath response = apiCoreRequests
+                .makeDeleteRequestToDeleteUserWithoutAuth("https://playground.learnqa.ru/api/user/2", userData);
 
-        JsonPath response = RestAssured
-                .given()
-                .body(userData)
-                .delete("https://playground.learnqa.ru/api/user/2")
-                .jsonPath();
 
         String message = response.get("error");
         System.out.println(message);
@@ -38,17 +39,16 @@ public class UserDeleteTest extends BaseTestCase {
         assertEquals(message, "Auth token not supplied");
     }
 
+    @Description("Delete user: positive test")
+    @DisplayName("Delete user success")
     @Test
     public void testPositiveDeleteUser() {
 
         //GENERATE USER
         Map<String, String> userData = DataGenerator.getRegistrationData();
 
-        JsonPath responseCreateAuth = RestAssured
-                .given()
-                .body(userData)
-                .post("https://playground.learnqa.ru/api/user/")
-                .jsonPath();
+        JsonPath responseCreateAuth = apiCoreRequests
+                .makePostRequestGenerateUser(userData);
 
         String userId = responseCreateAuth.getString("id");
 
@@ -57,11 +57,8 @@ public class UserDeleteTest extends BaseTestCase {
         authData.put("email", userData.get("email"));
         authData.put("password", userData.get("password"));
 
-        Response responseGetAuth = RestAssured
-                .given()
-                .body(authData)
-                .post("https://playground.learnqa.ru/api/user/login")
-                .andReturn();
+        Response responseGetAuth = apiCoreRequests
+                .makePostRequestLoginUser("https://playground.learnqa.ru/api/user/login", authData);
 
         //DElETE
 
@@ -69,29 +66,83 @@ public class UserDeleteTest extends BaseTestCase {
         deleteData.put("email", userData.get("email"));
         deleteData.put("password", userData.get("password"));
 
+        Response responseDeleteUser = apiCoreRequests
+                .makeDeleteRequestToDeleteUserWithAuth("https://playground.learnqa.ru/api/user/" + userId,
+                        deleteData,
+                        getCookie(responseGetAuth, "auth_sid"),
+                        getHeader(responseGetAuth, "x-csrf-token"));
 
-        Response responseDeleteUser = RestAssured
-                .given()
-                .header("x-csrf-token", this.getHeader(responseGetAuth, "x-csrf-token"))
-                .cookie("auth_sid", this.getCookie(responseGetAuth, "auth_sid"))
-                .body(deleteData)
-                .delete("https://playground.learnqa.ru/api/user/" + userId)
-                .andReturn();
+        System.out.println(responseDeleteUser.asString());
+        System.out.println(responseDeleteUser.statusCode());
+
+        Assertions.assertResponseCodeEquals(responseDeleteUser, 200);
+        String expectedField = "success";
+        Assertions.assertJsonHasField(responseDeleteUser, expectedField);
+        Assertions.assertJsonByName(responseDeleteUser, "success", "!");
 
         //GET
 
-        Response responseUserData = RestAssured
-                .given()
-                .header("x-csrf-token", this.getHeader(responseGetAuth, "x-csrf-token"))
-                .cookie("auth_sid", this.getCookie(responseGetAuth, "auth_sid"))
-                .get("https://playground.learnqa.ru/api/user/" + userId)
-                .andReturn();
+        Response responseUserData = apiCoreRequests
+                .makeGetRequestGetUserData("https://playground.learnqa.ru/api/user/" + userId,
+                        getCookie(responseGetAuth, "auth_sid"),
+                        getHeader(responseGetAuth, "x-csrf-token"));
 
         System.out.println(responseUserData.asString());
         System.out.println(responseUserData.statusCode());
 
-        Assertions.assertResponseCodeEquals(responseUserData, 400);
+        Assertions.assertResponseCodeEquals(responseUserData, 404);
         Assertions.assertResponseTextEquals(responseUserData, "User not found");
 
     }
+
+    @Description("Delete user: auth as other user")
+    @DisplayName("Delete user auth as other user: unsuccess")
+    @Test
+    public void testDeleteUserAuthAsOtherUser() {
+        //GENERATE USER
+        Map<String, String> userData = DataGenerator.getRegistrationData();
+
+        JsonPath responseCreateAuth = apiCoreRequests
+                .makePostRequestGenerateUser(userData);
+
+        String userId = responseCreateAuth.getString("id");
+
+        //GEERATE 2nd USER
+
+        Map<String, String> userData2 = DataGenerator.getRegistrationData();
+
+        JsonPath responseCreateAuth2 = apiCoreRequests
+                .makePostRequestGenerateSecondUser(userData2);
+
+        String userId2 = responseCreateAuth2.getString("id");
+
+        //LOGIN AS 1ST USER
+        Map<String, String> authData = new HashMap<>();
+        authData.put("email", userData.get("email"));
+        authData.put("password", userData.get("password"));
+
+        Response responseGetAuth = apiCoreRequests
+                .makePostRequestLoginUser("https://playground.learnqa.ru/api/user/login", authData);
+
+        //DElETE
+
+        Map<String, String> deleteData = new HashMap<>();
+        deleteData.put("email", userData.get("email"));
+        deleteData.put("password", userData.get("password"));
+
+        Response responseDeleteUser = apiCoreRequests
+                .makeDeleteRequestToDeleteUserWithAuth("https://playground.learnqa.ru/api/user/" + userId2,
+                        deleteData,
+                        getCookie(responseGetAuth, "auth_sid"),
+                        getHeader(responseGetAuth, "x-csrf-token"));
+
+
+        Assertions.assertResponseCodeEquals(responseDeleteUser, 400);
+        String expectedField = "error";
+        Assertions.assertJsonHasField(responseDeleteUser, expectedField);
+        Assertions.assertJsonByName(responseDeleteUser, "error", "This user can only delete their own account.");
+
+
+    }
+
 }
