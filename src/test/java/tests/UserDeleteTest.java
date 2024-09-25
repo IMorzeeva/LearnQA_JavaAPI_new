@@ -1,6 +1,8 @@
 package tests;
 
 import io.qameta.allure.Description;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Story;
 import io.restassured.RestAssured;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
@@ -19,9 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class UserDeleteTest extends BaseTestCase {
     private final ApiCoreRequests apiCoreRequests = new ApiCoreRequests();
 
+    @Story(value = "Delete User")
     @Description("Delete user without login")
     @DisplayName("Delete user without login")
     @Test
+    @Owner(value = "Inna Morzeeva")
     public void TestDeleteUserId2() {
         String email = "vinkotov@example.com";
 
@@ -42,6 +46,7 @@ public class UserDeleteTest extends BaseTestCase {
     @Description("Delete user: positive test")
     @DisplayName("Delete user success")
     @Test
+    @Owner(value = "Inna Morzeeva")
     public void testPositiveDeleteUser() {
 
         //GENERATE USER
@@ -98,6 +103,7 @@ public class UserDeleteTest extends BaseTestCase {
     @Description("Delete user: auth as other user")
     @DisplayName("Delete user auth as other user: unsuccess")
     @Test
+    @Owner(value = "Inna Morzeeva")
     public void testDeleteUserAuthAsOtherUser() {
         //GENERATE USER
         Map<String, String> userData = DataGenerator.getRegistrationData();
